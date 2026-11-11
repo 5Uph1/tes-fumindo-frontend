@@ -34,26 +34,30 @@ onBeforeUnmount(() => clearTimeout(timer))
 </script>
 
 <template>
-  <form class="mt-6 mb-[18px] max-w-[420px]" role="search" @submit.prevent="publish">
-    <label class="mb-2 block text-[13px] font-semibold text-slate-600" for="asset-search-input"
-      >Cari aset</label
-    >
+  <form class="w-full" role="search" @submit.prevent="publish">
+    <label class="mb-1.5 block text-xs font-semibold text-slate-600 uppercase tracking-wider" for="asset-search-input">
+      Cari Aset
+    </label>
+
     <div
-      class="flex items-center gap-2.5 rounded-[9px] border border-slate-300 bg-white px-3 focus-within:border-blue-600 focus-within:ring-3 focus-within:ring-blue-100"
+      class="flex items-center gap-2.5 rounded-xl border border-slate-200/80 bg-white px-3.5 shadow-2xs transition-all duration-150 focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-100"
     >
+      <!-- Icon Search -->
       <svg
-        class="size-5 shrink-0 text-slate-500"
+        class="h-4 w-4 shrink-0 text-slate-400"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        stroke-width="1.7"
+        stroke-width="2"
         aria-hidden="true"
       >
-        <circle cx="10.5" cy="10.5" r="6.5" />
-        <path d="m16 16 4 4" />
+        <circle cx="11" cy="11" r="8" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35" />
       </svg>
+
+      <!-- Input Field -->
       <input
-        class="min-w-0 w-full border-0 bg-transparent py-3 text-sm text-slate-900 outline-none placeholder:text-slate-500 [&::-webkit-search-cancel-button]:appearance-none"
+        class="min-w-0 w-full border-0 bg-transparent py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
         id="asset-search-input"
         v-model="draft"
         type="search"
@@ -62,14 +66,18 @@ onBeforeUnmount(() => clearTimeout(timer))
         @input="schedule"
         @compositionend="schedule"
       />
+
+      <!-- Clear Button (Muncul saat ada teks) -->
       <button
-        class="size-8 shrink-0 cursor-pointer rounded-[5px] border-0 bg-transparent text-2xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
+        class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-blue-600"
         v-if="draft"
         type="button"
         aria-label="Hapus pencarian"
         @click="clear"
       >
-        ×
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
   </form>

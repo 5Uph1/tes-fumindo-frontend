@@ -151,63 +151,91 @@ async function deleteAsset(asset: Asset) {
 </script>
 
 <template>
-  <main class="mx-auto max-w-[1160px] px-6 py-16">
-    <header>
-      <p class="text-[11px] font-bold tracking-[2px] text-blue-600">FUMINDO / INVENTORY</p>
-      <h1 class="my-3 text-[clamp(26px,4vw,34px)] font-bold tracking-[-1px]">Pengelolaan Aset</h1>
-      <p class="leading-relaxed text-slate-500">
+  <main class="mx-auto max-w-[1160px] px-4 py-8 sm:px-6 sm:py-12">
+    <!-- Header Section -->
+    <header class="mb-8">
+      <div class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold tracking-wider text-blue-600 uppercase border border-blue-100">
+        <span class="h-1.5 w-1.5 rounded-full bg-blue-600"></span>
+        FUMiNDO / INVENTORY
+      </div>
+      <h1 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+        Pengelolaan Aset
+      </h1>
+      <p class="mt-2 text-base text-slate-600 max-w-2xl">
         Daftar aset operasional dan persediaan perusahaan.
       </p>
     </header>
-    <div
-      class="mb-[18px] flex flex-wrap items-end justify-between gap-4 [&>form]:mb-0 [&>form]:min-w-[min(100%,260px)] [&>form]:flex-1"
-    >
+
+    <!-- Toolbar: Search & Main Action -->
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between [&>form]:w-full [&>form]:max-w-md">
       <AssetSearch v-model="search" />
+
       <button
         type="button"
-        class="cursor-pointer rounded-lg border-0 bg-blue-600 px-[18px] py-3 text-sm text-white focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
+        class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
         :disabled="detailLoading || saving || deleting"
         @click="openForm()"
       >
-        + Tambah aset
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Tambah Aset
       </button>
     </div>
-    <p v-if="detailLoading" role="status" class="mb-3 text-sm text-slate-500">
+
+    <!-- Status Loading State -->
+    <div v-if="detailLoading" role="status" class="mb-4 inline-flex items-center gap-2 rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 animate-pulse">
+      <svg class="h-4 w-4 animate-spin text-slate-500" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
       Memuat detail aset...
-    </p>
+    </div>
+
+    <!-- Error State -->
     <section
       v-if="listError"
       role="alert"
-      class="my-5 rounded-xl border border-red-200 bg-red-50 p-6 text-center"
+      class="my-6 rounded-2xl border border-red-200 bg-red-50/50 p-6 text-center backdrop-blur-sm"
     >
-      <h2 class="font-semibold text-red-800">Gagal memuat daftar aset</h2>
-      <p class="mt-2 text-sm text-red-700">{{ listError }}</p>
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0zm-9 3.75h.008v.008H12v-.008z" />
+        </svg>
+      </div>
+      <h2 class="mt-3 text-base font-semibold text-red-900">Gagal memuat daftar aset</h2>
+      <p class="mt-1 text-sm text-red-600 max-w-md mx-auto">{{ listError }}</p>
       <button
         type="button"
-        class="mt-4 cursor-pointer rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-800 focus-visible:outline-2 focus-visible:outline-blue-600"
+        class="mt-4 inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 shadow-sm transition hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-blue-600"
         @click="loadAssets"
       >
         Coba lagi
       </button>
     </section>
-    <AssetTable
-      v-else
-      :assets="assets"
-      :page="page"
-      :limit="limit"
-      :loading="loading"
-      :searching="search.length > 0"
-      @edit="openForm($event)"
-      @delete="confirmDelete"
-    />
-    <AssetPagination
-      v-if="!listError"
-      v-model:page="page"
-      :limit="limit"
-      :total="total"
-      :loading="loading"
-    />
+
+    <!-- Main Content Table & Pagination -->
+    <template v-else>
+      <AssetTable
+        :assets="assets"
+        :page="page"
+        :limit="limit"
+        :loading="loading"
+        :searching="search.length > 0"
+        @edit="openForm($event)"
+        @delete="confirmDelete"
+      />
+      <AssetPagination
+        v-model:page="page"
+        :limit="limit"
+        :total="total"
+        :loading="loading"
+      />
+    </template>
+
+    <!-- Modals & Overlay Components -->
     <AppToast :notification="notification" @dismiss="notification = null" />
+
     <AssetFormModal
       v-if="formOpen"
       :asset="editingAsset"
@@ -216,6 +244,7 @@ async function deleteAsset(asset: Asset) {
       @cancel="!saving && (formOpen = false)"
       @save="saveAsset"
     />
+
     <AssetDeleteModal
       v-if="deletingAsset"
       :asset="deletingAsset"
