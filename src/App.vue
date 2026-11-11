@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import AssetTable from './components/AssetTable.vue'
+import AssetSearch from './components/AssetSearch.vue'
 import type { Asset } from './types/asset'
 
 const mode = ref<'data' | 'loading' | 'empty' | 'search'>('data')
 const selectedAction = ref('')
+const search = ref('')
 const examples: Asset[] = [
   { asset_id: 3, asset_name: 'Laptop Operasional', stock_quantity: 5, category: 'Non-Consumable' },
   { asset_id: 2, asset_name: 'Kertas A4', stock_quantity: 0, category: 'Consumable' },
   { asset_id: 1, asset_name: 'Pulpen', stock_quantity: 50, category: 'Consumable' },
 ]
-const assets = computed(() => (mode.value === 'data' ? examples : []))
+const assets = computed(() => {
+  if (mode.value !== 'data') return []
+  const keyword = search.value.toLocaleLowerCase('id-ID')
+  return examples.filter((asset) => asset.asset_name.toLocaleLowerCase('id-ID').includes(keyword))
+})
 </script>
 
 <template>
@@ -30,10 +36,11 @@ const assets = computed(() => (mode.value === 'data' ? examples : []))
       </select>
       <span>Data contoh lokal, belum terhubung ke API.</span>
     </div>
+    <AssetSearch v-model="search" />
     <AssetTable
       :assets="assets"
       :loading="mode === 'loading'"
-      :searching="mode === 'search'"
+      :searching="mode === 'search' || search.length > 0"
       @edit="selectedAction = `Edit dipilih: ${$event.asset_name}`"
       @delete="selectedAction = `Hapus dipilih: ${$event.asset_name}`"
     />
