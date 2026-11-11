@@ -34,11 +34,15 @@ onBeforeUnmount(() => clearTimeout(timer))
 </script>
 
 <template>
-  <form class="asset-search" role="search" @submit.prevent="publish">
-    <label for="asset-search-input">Cari aset</label>
-    <div class="search-field">
+  <form class="mt-6 mb-[18px] max-w-[420px]" role="search" @submit.prevent="publish">
+    <label class="mb-2 block text-[13px] font-semibold text-slate-600" for="asset-search-input"
+      >Cari aset</label
+    >
+    <div
+      class="flex items-center gap-2.5 rounded-[9px] border border-slate-300 bg-white px-3 focus-within:border-blue-600 focus-within:ring-3 focus-within:ring-blue-100"
+    >
       <svg
-        class="search-icon"
+        class="size-5 shrink-0 text-slate-500"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -49,6 +53,7 @@ onBeforeUnmount(() => clearTimeout(timer))
         <path d="m16 16 4 4" />
       </svg>
       <input
+        class="min-w-0 w-full border-0 bg-transparent py-3 text-sm text-slate-900 outline-none placeholder:text-slate-500 [&::-webkit-search-cancel-button]:appearance-none"
         id="asset-search-input"
         v-model="draft"
         type="search"
@@ -57,76 +62,15 @@ onBeforeUnmount(() => clearTimeout(timer))
         @input="schedule"
         @compositionend="schedule"
       />
-      <button v-if="draft" type="button" aria-label="Hapus pencarian" @click="clear">×</button>
+      <button
+        class="size-8 shrink-0 cursor-pointer rounded-[5px] border-0 bg-transparent text-2xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
+        v-if="draft"
+        type="button"
+        aria-label="Hapus pencarian"
+        @click="clear"
+      >
+        ×
+      </button>
     </div>
   </form>
 </template>
-
-<style scoped>
-.asset-search {
-  max-width: 420px;
-  margin: 24px 0 18px;
-}
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #475569;
-}
-.search-field {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 9px;
-  padding: 0 12px;
-}
-.search-field:focus-within {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px #dbeafe;
-}
-.search-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  color: #64748b;
-}
-input {
-  width: 100%;
-  min-width: 0;
-  padding: 12px 0;
-  border: 0;
-  outline: none;
-  background: transparent;
-  font: inherit;
-  font-size: 14px;
-  color: #0f172a;
-}
-input::placeholder {
-  color: #64748b;
-}
-input::-webkit-search-cancel-button {
-  appearance: none;
-}
-button {
-  border: 0;
-  background: transparent;
-  color: #64748b;
-  cursor: pointer;
-  font-size: 24px;
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  border-radius: 5px;
-}
-button:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-button:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-</style>

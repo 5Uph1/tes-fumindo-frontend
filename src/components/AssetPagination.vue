@@ -27,12 +27,16 @@ function navigate(page: number) {
 </script>
 
 <template>
-  <div class="pagination">
+  <div
+    class="flex flex-wrap items-center justify-between gap-4 py-[18px] text-[13px] text-slate-500"
+  >
     <p role="status">
-      Menampilkan <strong>{{ first }}–{{ last }}</strong> dari <strong>{{ total }}</strong> aset
+      Menampilkan <strong class="font-semibold text-slate-700">{{ first }}–{{ last }}</strong> dari
+      <strong class="font-semibold text-slate-700">{{ total }}</strong> aset
     </p>
-    <nav aria-label="Halaman daftar aset">
+    <nav class="flex flex-wrap gap-1.5" aria-label="Halaman daftar aset">
       <button
+        class="min-h-9 min-w-9 cursor-pointer rounded-[7px] border border-slate-200 bg-white px-2.5 py-2 text-slate-600 enabled:hover:border-blue-300 enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
         type="button"
         :disabled="loading || page <= 1"
         aria-label="Halaman pertama"
@@ -40,14 +44,24 @@ function navigate(page: number) {
       >
         «
       </button>
-      <button type="button" :disabled="loading || page <= 1" @click="navigate(page - 1)">
+      <button
+        class="min-h-9 min-w-9 cursor-pointer rounded-[7px] border border-slate-200 bg-white px-2.5 py-2 text-slate-600 enabled:hover:border-blue-300 enabled:hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
+        type="button"
+        :disabled="loading || page <= 1"
+        @click="navigate(page - 1)"
+      >
         Sebelumnya
       </button>
       <button
+        class="min-h-9 min-w-9 cursor-pointer rounded-[7px] border px-2.5 py-2 enabled:hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
         v-for="number in pages"
         :key="number"
         type="button"
-        :class="{ active: number === page }"
+        :class="
+          number === page
+            ? 'border-blue-600 bg-blue-600 text-white enabled:hover:bg-blue-700'
+            : 'border-slate-200 bg-white text-slate-600 enabled:hover:bg-blue-50'
+        "
         :aria-current="number === page ? 'page' : undefined"
         :aria-label="`Halaman ${number}`"
         :disabled="loading"
@@ -56,6 +70,7 @@ function navigate(page: number) {
         {{ number }}
       </button>
       <button
+        class="border-slate-200 bg-white text-slate-600 enabled:hover:bg-blue-50 min-h-9 min-w-9 cursor-pointer rounded-[7px] border px-2.5 py-2 enabled:hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
         type="button"
         :disabled="loading || page >= totalPages || total === 0"
         @click="navigate(page + 1)"
@@ -63,6 +78,7 @@ function navigate(page: number) {
         Berikutnya
       </button>
       <button
+        class="border-slate-200 bg-white text-slate-600 enabled:hover:bg-blue-50 min-h-9 min-w-9 cursor-pointer rounded-[7px] border px-2.5 py-2 enabled:hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
         type="button"
         :disabled="loading || page >= totalPages || total === 0"
         aria-label="Halaman terakhir"
@@ -73,59 +89,3 @@ function navigate(page: number) {
     </nav>
   </div>
 </template>
-
-<style scoped>
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 18px 0;
-  color: #64748b;
-  font-size: 13px;
-}
-p {
-  margin: 0;
-}
-strong {
-  color: #334155;
-  font-weight: 600;
-}
-nav {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-button {
-  min-width: 36px;
-  min-height: 36px;
-  padding: 8px 10px;
-  border: 1px solid #dbe3ee;
-  border-radius: 7px;
-  background: white;
-  color: #475569;
-  font: inherit;
-  cursor: pointer;
-}
-button:hover:not(:disabled) {
-  border-color: #93c5fd;
-  background: #eff6ff;
-}
-button.active {
-  background: #2563eb;
-  color: white;
-  border-color: #2563eb;
-}
-button.active:hover:not(:disabled) {
-  background: #1d4ed8;
-}
-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-button:focus-visible {
-  outline: 3px solid #93c5fd;
-  outline-offset: 2px;
-}
-</style>

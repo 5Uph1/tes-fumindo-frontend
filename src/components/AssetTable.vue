@@ -24,10 +24,16 @@ defineEmits<{
 </script>
 
 <template>
-  <section class="asset-table" aria-label="Daftar aset" :aria-busy="loading">
+  <section
+    class="overflow-hidden rounded-[14px] border border-slate-200 bg-white"
+    aria-label="Daftar aset"
+    :aria-busy="loading"
+  >
     <p v-if="loading" class="sr-only" role="status">Memuat daftar aset...</p>
-    <div class="table-scroll">
-      <table>
+    <div class="overflow-x-auto">
+      <table
+        class="w-full border-collapse text-left text-sm [&_th]:bg-slate-50 [&_th]:text-xs [&_th]:font-semibold [&_th]:whitespace-nowrap [&_th]:text-slate-500 [&_th]:px-[22px] [&_th]:py-[18px] [&_td]:px-[22px] [&_td]:py-[18px] [&_tbody_tr+tr]:border-t [&_tbody_tr+tr]:border-slate-100 [&_tbody_tr:hover]:bg-slate-50/50"
+      >
         <caption class="sr-only">
           Data aset dan tindakan pengelolaannya
         </caption>
@@ -35,29 +41,43 @@ defineEmits<{
           <tr>
             <th scope="col">No</th>
             <th scope="col">Asset Name</th>
-            <th scope="col" class="stock">Stock Quantity</th>
+            <th scope="col" class="text-right tabular-nums">Stock Quantity</th>
             <th scope="col">Category</th>
             <th scope="col">Action</th>
           </tr>
         </thead>
         <tbody v-if="loading" aria-hidden="true">
           <tr v-for="row in 5" :key="row">
-            <td v-for="column in 5" :key="column"><span class="skeleton" /></td>
+            <td v-for="column in 5" :key="column">
+              <span
+                class="block h-5 min-w-8 animate-pulse rounded-[5px] bg-slate-200 motion-reduce:animate-none"
+              />
+            </td>
           </tr>
         </tbody>
         <tbody v-else-if="assets.length">
           <tr v-for="(asset, index) in assets" :key="asset.asset_id">
-            <td class="row-number">{{ (page - 1) * limit + index + 1 }}</td>
-            <td class="asset-name">{{ asset.asset_name }}</td>
-            <td class="stock">{{ asset.stock_quantity.toLocaleString('id-ID') }}</td>
+            <td class="text-slate-500">{{ (page - 1) * limit + index + 1 }}</td>
+            <td class="min-w-40 font-semibold [overflow-wrap:anywhere]">{{ asset.asset_name }}</td>
+            <td class="text-right tabular-nums">
+              {{ asset.stock_quantity.toLocaleString('id-ID') }}
+            </td>
             <td>
-              <span class="badge" :class="{ durable: asset.category === 'Non-Consumable' }">
+              <span
+                class="inline-block rounded-md px-2.5 py-[5px] text-xs whitespace-nowrap"
+                :class="
+                  asset.category === 'Non-Consumable'
+                    ? 'bg-indigo-50 text-indigo-700'
+                    : 'bg-emerald-50 text-emerald-700'
+                "
+              >
                 {{ asset.category }}
               </span>
             </td>
             <td>
-              <div class="actions">
+              <div class="flex gap-2">
                 <button
+                  class="cursor-pointer rounded-md border border-slate-200 bg-white px-3 py-[7px] text-slate-700 hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
                   type="button"
                   :aria-label="`Edit ${asset.asset_name}`"
                   @click="$emit('edit', asset)"
@@ -66,7 +86,7 @@ defineEmits<{
                 </button>
                 <button
                   type="button"
-                  class="delete"
+                  class="cursor-pointer rounded-md border border-slate-200 bg-white px-3 py-[7px] text-red-700 hover:border-red-300 hover:bg-red-50 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
                   :aria-label="`Hapus ${asset.asset_name}`"
                   @click="$emit('delete', asset)"
                 >
@@ -78,7 +98,10 @@ defineEmits<{
         </tbody>
         <tbody v-else>
           <tr>
-            <td colspan="5" class="empty">
+            <td
+              colspan="5"
+              class="px-6! py-16! text-center text-slate-600 [&_strong]:text-base [&_p]:mt-2.5 [&_p]:text-slate-500"
+            >
               <strong>{{ searching ? 'Aset tidak ditemukan' : 'Belum ada aset' }}</strong>
               <p>
                 {{
@@ -94,132 +117,3 @@ defineEmits<{
     </div>
   </section>
 </template>
-
-<style scoped>
-.asset-table {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  overflow: hidden;
-}
-.table-scroll {
-  overflow-x: auto;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 14px;
-}
-th {
-  background: #f8fafc;
-  color: #64748b;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-th,
-td {
-  padding: 18px 22px;
-}
-tbody tr + tr {
-  border-top: 1px solid #f1f5f9;
-}
-tbody tr:hover {
-  background: #fafcff;
-}
-.stock {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.row-number {
-  color: #64748b;
-}
-.asset-name {
-  font-weight: 600;
-  min-width: 160px;
-  overflow-wrap: anywhere;
-}
-.badge {
-  display: inline-block;
-  padding: 5px 10px;
-  border-radius: 6px;
-  background: #ecfdf5;
-  color: #047857;
-  font-size: 12px;
-  white-space: nowrap;
-}
-.badge.durable {
-  background: #eef2ff;
-  color: #4338ca;
-}
-.actions {
-  display: flex;
-  gap: 8px;
-}
-button {
-  border: 1px solid #dbe3ee;
-  border-radius: 6px;
-  padding: 7px 12px;
-  background: white;
-  color: #334155;
-  cursor: pointer;
-  font: inherit;
-}
-button:hover {
-  background: #eff6ff;
-  border-color: #93c5fd;
-}
-button:focus-visible {
-  outline: 3px solid #2563eb;
-  outline-offset: 3px;
-}
-button.delete {
-  color: #b91c1c;
-}
-button.delete:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
-}
-.empty {
-  text-align: center;
-  padding: 64px 24px;
-  color: #475569;
-}
-.empty strong {
-  font-size: 16px;
-}
-.empty p {
-  color: #64748b;
-  margin: 10px 0 0;
-}
-.skeleton {
-  display: block;
-  min-width: 32px;
-  height: 20px;
-  border-radius: 5px;
-  background: #e2e8f0;
-  animation: pulse 1.4s ease-in-out infinite;
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
-@keyframes pulse {
-  50% {
-    opacity: 0.4;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .skeleton {
-    animation: none;
-  }
-}
-</style>

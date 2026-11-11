@@ -59,20 +59,24 @@ function submit() {
 <template>
   <dialog
     ref="dialog"
-    class="asset-modal"
+    class="m-auto max-h-[calc(100dvh-32px)] rounded-2xl border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_80px_#0f172a33] backdrop:bg-slate-900/50 w-[min(480px,calc(100%-32px))]"
     aria-labelledby="asset-form-title"
     :aria-busy="saving"
     @cancel.prevent="cancel"
   >
     <form novalidate @submit.prevent="submit">
-      <header class="modal-header">
+      <header
+        class="flex justify-between gap-4 border-b border-slate-200 p-6 [&_p]:text-sm [&_p]:text-slate-500"
+      >
         <div>
-          <h2 id="asset-form-title">{{ asset ? 'Edit aset' : 'Tambah aset' }}</h2>
+          <h2 class="mb-2 text-[21px] font-semibold" id="asset-form-title">
+            {{ asset ? 'Edit aset' : 'Tambah aset' }}
+          </h2>
           <p>Lengkapi informasi aset di bawah ini.</p>
         </div>
         <button
           type="button"
-          class="close"
+          class="cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 enabled:hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2 size-8 border-0! bg-transparent! p-0! text-2xl!"
           aria-label="Tutup form"
           :disabled="saving"
           @click="cancel"
@@ -80,10 +84,11 @@ function submit() {
           ×
         </button>
       </header>
-      <div class="fields">
+      <div class="grid gap-5 p-6">
         <div>
-          <label for="asset-name">Nama aset</label>
+          <label class="mb-2 block text-sm font-semibold" for="asset-name">Nama aset</label>
           <input
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-[11px] text-sm text-slate-900 aria-invalid:border-red-600 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
             id="asset-name"
             v-model="name"
             autofocus
@@ -92,11 +97,14 @@ function submit() {
             :aria-invalid="!!errors.name"
             :aria-describedby="errors.name ? 'name-error' : undefined"
           />
-          <p v-if="errors.name" id="name-error" class="field-error">{{ errors.name }}</p>
+          <p v-if="errors.name" id="name-error" class="mt-1.5 text-xs leading-normal text-red-700">
+            {{ errors.name }}
+          </p>
         </div>
         <div>
-          <label for="asset-stock">Jumlah stok</label>
+          <label class="mb-2 block text-sm font-semibold" for="asset-stock">Jumlah stok</label>
           <input
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-[11px] text-sm text-slate-900 aria-invalid:border-red-600 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
             id="asset-stock"
             v-model="stock"
             type="number"
@@ -108,12 +116,17 @@ function submit() {
             :aria-invalid="!!errors.stock"
             aria-describedby="stock-help stock-error"
           />
-          <p id="stock-help" class="hint">Gunakan 0 jika stok belum tersedia.</p>
-          <p id="stock-error" class="field-error">{{ errors.stock }}</p>
+          <p id="stock-help" class="mt-1.5 text-xs leading-normal text-slate-500">
+            Gunakan 0 jika stok belum tersedia.
+          </p>
+          <p id="stock-error" class="mt-1.5 text-xs leading-normal text-red-700">
+            {{ errors.stock }}
+          </p>
         </div>
         <div>
-          <label for="asset-category">Kategori</label>
+          <label class="mb-2 block text-sm font-semibold" for="asset-category">Kategori</label>
           <select
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-[11px] text-sm text-slate-900 aria-invalid:border-red-600 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
             id="asset-category"
             v-model="category"
             required
@@ -125,128 +138,35 @@ function submit() {
             <option value="Consumable">Consumable</option>
             <option value="Non-Consumable">Non-Consumable</option>
           </select>
-          <p v-if="errors.category" id="category-error" class="field-error">
+          <p
+            v-if="errors.category"
+            id="category-error"
+            class="mt-1.5 text-xs leading-normal text-red-700"
+          >
             {{ errors.category }}
           </p>
         </div>
-        <p v-if="error" role="alert" class="field-error">{{ error }}</p>
+        <p v-if="error" role="alert" class="mt-1.5 text-xs leading-normal text-red-700">
+          {{ error }}
+        </p>
       </div>
-      <footer>
-        <button type="button" :disabled="saving" @click="cancel">Batal</button>
-        <button type="submit" class="primary" :disabled="saving">
+      <footer class="flex justify-end gap-2.5 border-t border-slate-200 px-6 py-[18px]">
+        <button
+          class="cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 enabled:hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
+          type="button"
+          :disabled="saving"
+          @click="cancel"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          class="cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 enabled:hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2 border-blue-600! bg-blue-600! text-white!"
+          :disabled="saving"
+        >
           {{ saving ? 'Menyimpan...' : 'Simpan aset' }}
         </button>
       </footer>
     </form>
   </dialog>
 </template>
-
-<style scoped>
-.asset-modal {
-  width: min(480px, calc(100% - 32px));
-  max-height: calc(100dvh - 32px);
-  padding: 0;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  color: #0f172a;
-  box-shadow: 0 24px 80px #0f172a33;
-}
-.asset-modal::backdrop {
-  background: #0f172a80;
-}
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 24px;
-  border-bottom: 1px solid #e2e8f0;
-}
-h2 {
-  font-size: 21px;
-  margin: 0 0 8px;
-}
-.modal-header p {
-  margin: 0;
-  color: #64748b;
-  font-size: 14px;
-}
-.fields {
-  display: grid;
-  gap: 20px;
-  padding: 24px;
-}
-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-input,
-select {
-  width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 11px 12px;
-  background: white;
-  color: #0f172a;
-  font: inherit;
-  font-size: 14px;
-}
-[aria-invalid='true'] {
-  border-color: #dc2626;
-}
-.hint,
-.field-error {
-  font-size: 12px;
-  margin: 6px 0 0;
-  line-height: 1.5;
-}
-.hint {
-  color: #64748b;
-}
-.field-error {
-  color: #b91c1c;
-}
-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 18px 24px;
-  border-top: 1px solid #e2e8f0;
-}
-button {
-  padding: 10px 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font: inherit;
-  font-size: 14px;
-  background: white;
-  color: #334155;
-  cursor: pointer;
-}
-button.primary {
-  background: #2563eb;
-  color: white;
-  border-color: #2563eb;
-}
-button.close {
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  border: 0;
-  font-size: 24px;
-}
-button:hover:not(:disabled) {
-  filter: brightness(0.95);
-}
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-input:focus-visible,
-select:focus-visible,
-button:focus-visible {
-  outline: 3px solid #93c5fd;
-  outline-offset: 2px;
-}
-</style>

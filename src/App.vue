@@ -4,6 +4,7 @@ import AssetTable from './components/AssetTable.vue'
 import AssetSearch from './components/AssetSearch.vue'
 import AssetPagination from './components/AssetPagination.vue'
 import AssetFormModal from './components/AssetFormModal.vue'
+import AssetDeleteModal from './components/AssetDeleteModal.vue'
 import type { Asset, AssetInput } from './types/asset'
 
 const mode = ref<'data' | 'loading' | 'empty' | 'search'>('data')
@@ -13,6 +14,7 @@ const page = ref(1)
 const limit = 10
 const formOpen = ref(false)
 const editingAsset = ref<Asset | null>(null)
+const deletingAsset = ref<Asset | null>(null)
 const examples = ref<Asset[]>([
   { asset_id: 3, asset_name: 'Laptop Operasional', stock_quantity: 5, category: 'Non-Consumable' },
   { asset_id: 2, asset_name: 'Kertas A4', stock_quantity: 0, category: 'Consumable' },
@@ -64,16 +66,27 @@ function saveExample(input: AssetInput) {
   // Edit nama dapat membuat aset tidak lagi cocok dengan pencarian aktif.
   page.value = Math.min(page.value, Math.max(1, Math.ceil(filteredAssets.value.length / limit)))
 }
+
+function deleteExample(asset: Asset) {
+  examples.value = examples.value.filter((item) => item.asset_id !== asset.asset_id)
+  deletingAsset.value = null
+  selectedAction.value = `Data contoh ${asset.asset_name} berhasil dihapus secara lokal.`
+  page.value = Math.min(page.value, Math.max(1, Math.ceil(filteredAssets.value.length / limit)))
+}
 </script>
 
 <template>
-  <main>
+  <main class="mx-auto max-w-[1160px] px-6 py-16">
     <header>
-      <p class="eyebrow">FUMINDO / INVENTORY</p>
-      <h1>Pengelolaan Aset</h1>
-      <p class="subtitle">Daftar aset operasional dan persediaan perusahaan.</p>
+      <p class="text-[11px] font-bold tracking-[2px] text-blue-600">FUMINDO / INVENTORY</p>
+      <h1 class="my-3 text-[clamp(26px,4vw,34px)] font-bold tracking-[-1px]">Pengelolaan Aset</h1>
+      <p class="leading-relaxed text-slate-500">
+        Daftar aset operasional dan persediaan perusahaan.
+      </p>
     </header>
-    <div class="preview">
+    <div
+      class="mt-8 mb-[18px] flex flex-wrap items-center gap-3 text-[13px] text-slate-600 [&_select]:rounded-md [&_select]:border [&_select]:border-slate-300 [&_select]:bg-white [&_select]:p-2 [&_select]:text-slate-700 [&_span]:text-slate-500"
+    >
       <label for="preview-mode">Pratinjau tabel</label>
       <select id="preview-mode" v-model="mode">
         <option value="data">Data contoh</option>
@@ -83,9 +96,17 @@ function saveExample(input: AssetInput) {
       </select>
       <span>Data contoh lokal, belum terhubung ke API.</span>
     </div>
-    <div class="asset-toolbar">
+    <div
+      class="mb-[18px] flex flex-wrap items-end justify-between gap-4 [&>form]:mb-0 [&>form]:min-w-[min(100%,260px)] [&>form]:flex-1"
+    >
       <AssetSearch v-model="search" />
-      <button type="button" class="add-asset" @click="openForm()">+ Tambah aset</button>
+      <button
+        type="button"
+        class="cursor-pointer rounded-lg border-0 bg-blue-600 px-[18px] py-3 text-sm text-white focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
+        @click="openForm()"
+      >
+        + Tambah aset
+      </button>
     </div>
     <AssetTable
       :assets="assets"
@@ -94,7 +115,7 @@ function saveExample(input: AssetInput) {
       :loading="mode === 'loading'"
       :searching="mode === 'search' || search.length > 0"
       @edit="openForm($event)"
-      @delete="selectedAction = `Hapus dipilih: ${$event.asset_name}`"
+      @delete="deletingAsset = $event"
     />
     <AssetPagination
       v-model:page="page"
@@ -102,96 +123,18 @@ function saveExample(input: AssetInput) {
       :total="filteredAssets.length"
       :loading="mode === 'loading'"
     />
-    <p class="action-status" role="status">{{ selectedAction }}</p>
+    <p class="min-h-6 text-sm text-slate-600" role="status">{{ selectedAction }}</p>
     <AssetFormModal
       v-if="formOpen"
       :asset="editingAsset"
       @cancel="formOpen = false"
       @save="saveExample"
     />
+    <AssetDeleteModal
+      v-if="deletingAsset"
+      :asset="deletingAsset"
+      @cancel="deletingAsset = null"
+      @confirm="deleteExample"
+    />
   </main>
 </template>
-
-<style>
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-  background: #f5f7fb;
-  color: #0f172a;
-  font-family: Inter, 'Segoe UI', sans-serif;
-}
-main {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 64px 24px;
-}
-.eyebrow {
-  color: #2563eb;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 2px;
-}
-h1 {
-  margin: 12px 0;
-  font-size: clamp(26px, 4vw, 34px);
-  letter-spacing: -1px;
-}
-.subtitle {
-  color: #64748b;
-  line-height: 1.6;
-}
-.preview {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 32px 0 18px;
-  font-size: 13px;
-  color: #475569;
-}
-.preview select {
-  padding: 8px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: white;
-  color: #334155;
-  font: inherit;
-}
-.preview span {
-  color: #64748b;
-}
-.action-status {
-  min-height: 24px;
-  color: #475569;
-  font-size: 14px;
-}
-.asset-toolbar {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-.asset-toolbar > form {
-  flex: 1;
-  margin-bottom: 0;
-  min-width: min(100%, 260px);
-}
-.add-asset {
-  padding: 12px 18px;
-  border: 0;
-  border-radius: 8px;
-  background: #2563eb;
-  color: white;
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-.add-asset:focus-visible {
-  outline: 3px solid #93c5fd;
-  outline-offset: 3px;
-}
-</style>
