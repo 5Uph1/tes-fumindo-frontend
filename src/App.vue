@@ -5,10 +5,17 @@ import AssetSearch from './components/AssetSearch.vue'
 import AssetPagination from './components/AssetPagination.vue'
 import AssetFormModal from './components/AssetFormModal.vue'
 import AssetDeleteModal from './components/AssetDeleteModal.vue'
+import AppToast from './components/AppToast.vue'
 import type { Asset, AssetInput } from './types/asset'
+import type { Notification } from './types/notification'
 
 const mode = ref<'data' | 'loading' | 'empty' | 'search'>('data')
-const selectedAction = ref('')
+const notification = ref<Notification | null>(null)
+let notificationId = 0
+
+function notify(type: Notification['type'], message: string) {
+  notification.value = { id: ++notificationId, type, message }
+}
 const search = ref('')
 const page = ref(1)
 const limit = 10
@@ -61,7 +68,12 @@ function saveExample(input: AssetInput) {
     const id = Math.max(0, ...examples.value.map((asset) => asset.asset_id)) + 1
     examples.value.push({ asset_id: id, ...input })
   }
-  selectedAction.value = 'Data contoh berhasil disimpan secara lokal.'
+  notify(
+    'success',
+    editingAsset.value
+      ? 'Data contoh aset berhasil diperbarui.'
+      : 'Data contoh aset berhasil ditambahkan.',
+  )
   formOpen.value = false
   // Edit nama dapat membuat aset tidak lagi cocok dengan pencarian aktif.
   page.value = Math.min(page.value, Math.max(1, Math.ceil(filteredAssets.value.length / limit)))
@@ -70,7 +82,7 @@ function saveExample(input: AssetInput) {
 function deleteExample(asset: Asset) {
   examples.value = examples.value.filter((item) => item.asset_id !== asset.asset_id)
   deletingAsset.value = null
-  selectedAction.value = `Data contoh ${asset.asset_name} berhasil dihapus secara lokal.`
+  notify('success', `Data contoh ${asset.asset_name} berhasil dihapus.`)
   page.value = Math.min(page.value, Math.max(1, Math.ceil(filteredAssets.value.length / limit)))
 }
 </script>
@@ -95,6 +107,15 @@ function deleteExample(asset: Asset) {
         <option value="search">Pencarian kosong</option>
       </select>
       <span>Data contoh lokal, belum terhubung ke API.</span>
+      <button
+        type="button"
+        class="cursor-pointer rounded-md border border-red-200 bg-white px-3 py-2 text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-blue-600"
+        @click="
+          notify('error', 'Ini contoh notifikasi gagal. Tidak ada permintaan API yang dikirim.')
+        "
+      >
+        Coba toast gagal
+      </button>
     </div>
     <div
       class="mb-[18px] flex flex-wrap items-end justify-between gap-4 [&>form]:mb-0 [&>form]:min-w-[min(100%,260px)] [&>form]:flex-1"
@@ -123,7 +144,7 @@ function deleteExample(asset: Asset) {
       :total="filteredAssets.length"
       :loading="mode === 'loading'"
     />
-    <p class="min-h-6 text-sm text-slate-600" role="status">{{ selectedAction }}</p>
+    <AppToast :notification="notification" @dismiss="notification = null" />
     <AssetFormModal
       v-if="formOpen"
       :asset="editingAsset"
