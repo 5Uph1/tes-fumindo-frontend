@@ -1,56 +1,88 @@
-# .
+﻿# Test Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Halaman pengelolaan aset menggunakan Vue dan Tailwind CSS, terhubung ke API NestJS.
 
-## Recommended IDE Setup
+## Versi yang digunakan
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Node.js 24.21.0
+- npm 11.19.0
+- Vue 3.6.0-rc.14
+- Vite 8.3.8
+- Tailwind CSS 4.3.5
+- TypeScript melalui `typescript-native-bridge`
 
-This project replaces its workspace TypeScript package with [typescript-native-bridge](https://github.com/johnsoncodehk/typescript-native-bridge). Command-line tools use the bridge automatically. To use it in VS Code after installing dependencies, accept the prompt to use the workspace TypeScript version. If the prompt does not appear, run **TypeScript: Select TypeScript Version** and choose **Use Workspace Version**.
+Versi library mengikuti `package-lock.json`. Vue yang digunakan pada proyek ini masih versi release candidate (RC).
 
-## Recommended Browser Setup
+## Instalasi
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+### 1. Download proyek dan pasang dependency
 
-## Type Support for `.vue` Imports in TS
+Pastikan Node.js, npm, dan Git sudah terpasang, lalu jalankan:
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
+```bash
+git clone https://github.com/5Uph1/tes-fumindo-frontend.git
+cd tes-fumindo-frontend
+npm ci
 ```
 
-### Compile and Hot-Reload for Development
+### 2. Siapkan alamat API
 
-```sh
+Salin `.env.example` menjadi `.env`. Bisa melalui file explorer atau terminal:
+
+```bash
+# Git Bash / Linux / macOS
+cp .env.example .env
+```
+
+Untuk PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Isi `.env` dengan alamat backend:
+
+```dotenv
+VITE_API_BASE_URL=http://localhost:3000/api
+```
+
+Jika backend memakai host atau port lain, sesuaikan alamatnya. Tetap sertakan `/api` di akhir alamat. Setelah mengubah `.env`, jalankan ulang frontend agar pengaturan baru terbaca.
+
+### 3. Pastikan backend sudah berjalan
+
+Ikuti [panduan backend](https://github.com/5Uph1/tes-fumindo-backend) untuk menyiapkan PostgreSQL, tabel, dan menjalankan API.
+
+Coba buka `http://localhost:3000/api/assets`. Jika muncul respons JSON, backend sudah dapat diakses. Daftar boleh kosong jika belum ada aset.
+
+Di file `.env` backend, pastikan alamat frontend sudah sesuai:
+
+```dotenv
+FRONTEND_ORIGIN=http://localhost:5173
+```
+
+Jalankan ulang backend jika kamu mengubah pengaturan tersebut.
+
+## Menjalankan frontend
+
+```bash
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+Buka `http://localhost:5173` di browser. Dari halaman ini kamu bisa mencari, menambah, mengedit, dan menghapus aset.
 
-```sh
+Biarkan terminal frontend dan backend tetap berjalan selama aplikasi digunakan. Untuk menghentikan server, tekan `Ctrl+C` pada terminalnya.
+
+Frontend menggunakan port `5173`. Kalau port itu sedang dipakai, hentikan server lain yang menggunakan port tersebut, lalu jalankan kembali perintah di atas.
+
+Kalau ingin mencoba hasil build secara lokal:
+
+```bash
 npm run build
+npm run preview -- --port 5173 --strictPort
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+Hentikan development server frontend terlebih dahulu supaya port `5173` bisa digunakan untuk preview. Backend tetap perlu berjalan.
 
-```sh
-npm run test:unit
-```
+## Kalau data gagal dimuat
 
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+Periksa apakah backend dan PostgreSQL masih berjalan, alamat `VITE_API_BASE_URL` sudah benar, serta `FRONTEND_ORIGIN` backend sesuai dengan alamat yang dibuka di browser. Setelah koneksi kembali tersedia, klik **Coba lagi** pada halaman.
