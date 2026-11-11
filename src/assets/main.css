@@ -1,0 +1,8 @@
+@import 'tailwindcss';
+
+@layer base {
+  body {
+    @apply m-0 bg-[#f5f7fb] text-slate-900;
+    font-family: Inter, 'Segoe UI', sans-serif;
+  }
+}
