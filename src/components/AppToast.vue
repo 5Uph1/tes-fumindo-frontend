@@ -24,7 +24,7 @@ onBeforeUnmount(pause)
 
 <template>
   <Teleport to="body">
-    <div class="pointer-events-none fixed top-5 right-4 left-4 z-50 sm:left-auto sm:w-96">
+    <div class="pointer-events-none fixed right-4 bottom-5 left-4 z-50 sm:right-auto sm:w-96">
       <div role="status" aria-atomic="true" class="sr-only">
         {{ notification?.type === 'success' ? notification.message : '' }}
       </div>

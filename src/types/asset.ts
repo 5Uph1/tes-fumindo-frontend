@@ -6,3 +6,11 @@ export interface Asset {
 }
 
 export type AssetInput = Omit<Asset, 'asset_id'>
+
+export interface AssetList {
+  data: Asset[]
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}

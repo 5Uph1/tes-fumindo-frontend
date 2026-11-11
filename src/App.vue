@@ -1,89 +1,152 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import AssetTable from './components/AssetTable.vue'
 import AssetSearch from './components/AssetSearch.vue'
 import AssetPagination from './components/AssetPagination.vue'
 import AssetFormModal from './components/AssetFormModal.vue'
 import AssetDeleteModal from './components/AssetDeleteModal.vue'
 import AppToast from './components/AppToast.vue'
+import { assetsApi } from './services/assets'
 import type { Asset, AssetInput } from './types/asset'
 import type { Notification } from './types/notification'
 
-const mode = ref<'data' | 'loading' | 'empty' | 'search'>('data')
 const notification = ref<Notification | null>(null)
 let notificationId = 0
-
 function notify(type: Notification['type'], message: string) {
   notification.value = { id: ++notificationId, type, message }
 }
+
 const search = ref('')
 const page = ref(1)
 const limit = 10
+const assets = ref<Asset[]>([])
+const total = ref(0)
+const loading = ref(false)
+const listError = ref('')
 const formOpen = ref(false)
 const editingAsset = ref<Asset | null>(null)
 const deletingAsset = ref<Asset | null>(null)
-const examples = ref<Asset[]>([
-  { asset_id: 3, asset_name: 'Laptop Operasional', stock_quantity: 5, category: 'Non-Consumable' },
-  { asset_id: 2, asset_name: 'Kertas A4', stock_quantity: 0, category: 'Consumable' },
-  { asset_id: 1, asset_name: 'Pulpen', stock_quantity: 50, category: 'Consumable' },
-  { asset_id: 4, asset_name: 'Printer', stock_quantity: 2, category: 'Non-Consumable' },
-  { asset_id: 5, asset_name: 'Monitor', stock_quantity: 6, category: 'Non-Consumable' },
-  { asset_id: 6, asset_name: 'Keyboard', stock_quantity: 10, category: 'Non-Consumable' },
-  { asset_id: 7, asset_name: 'Mouse', stock_quantity: 10, category: 'Non-Consumable' },
-  { asset_id: 8, asset_name: 'Meja Kantor', stock_quantity: 12, category: 'Non-Consumable' },
-  { asset_id: 9, asset_name: 'Kursi Kantor', stock_quantity: 12, category: 'Non-Consumable' },
-  { asset_id: 10, asset_name: 'Pensil', stock_quantity: 30, category: 'Consumable' },
-  { asset_id: 11, asset_name: 'Penghapus', stock_quantity: 20, category: 'Consumable' },
-  { asset_id: 12, asset_name: 'Tinta Printer', stock_quantity: 8, category: 'Consumable' },
-  { asset_id: 13, asset_name: 'Map Dokumen', stock_quantity: 40, category: 'Consumable' },
-  { asset_id: 14, asset_name: 'Sticky Notes', stock_quantity: 15, category: 'Consumable' },
-  { asset_id: 15, asset_name: 'Baterai AA', stock_quantity: 0, category: 'Consumable' },
-])
-const filteredAssets = computed(() => {
-  if (mode.value !== 'data') return []
-  const keyword = search.value.toLocaleLowerCase('id-ID')
-  return examples.value
-    .filter((asset) => asset.asset_name.toLocaleLowerCase('id-ID').includes(keyword))
-    .sort((a, b) => b.asset_id - a.asset_id)
-})
-const assets = computed(() =>
-  filteredAssets.value.slice((page.value - 1) * limit, page.value * limit),
-)
-watch([search, mode], () => {
-  page.value = 1
-})
+const saving = ref(false)
+const deleting = ref(false)
+const detailLoading = ref(false)
+const formError = ref('')
+const deleteError = ref('')
+let listController: AbortController | undefined
+let disposed = false
 
-function openForm(asset: Asset | null = null) {
-  editingAsset.value = asset
-  formOpen.value = true
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Terjadi kesalahan. Silakan coba lagi.'
 }
 
-function saveExample(input: AssetInput) {
-  if (editingAsset.value) {
-    const index = examples.value.findIndex(
-      (asset) => asset.asset_id === editingAsset.value?.asset_id,
-    )
-    if (index !== -1) examples.value[index] = { asset_id: editingAsset.value.asset_id, ...input }
-  } else {
-    const id = Math.max(0, ...examples.value.map((asset) => asset.asset_id)) + 1
-    examples.value.push({ asset_id: id, ...input })
+async function loadAssets() {
+  listController?.abort()
+  const controller = new AbortController()
+  listController = controller
+  loading.value = true
+  listError.value = ''
+  try {
+    const result = await assetsApi.list(search.value, page.value, limit, controller.signal)
+    if (controller.signal.aborted) return
+    const lastPage = Math.max(1, result.totalPages)
+    if (page.value > lastPage) {
+      page.value = lastPage
+      return
+    }
+    assets.value = result.data
+    total.value = result.total
+  } catch (error) {
+    if (controller.signal.aborted) return
+    assets.value = []
+    total.value = 0
+    listError.value = errorMessage(error)
+  } finally {
+    if (listController === controller) loading.value = false
   }
-  notify(
-    'success',
-    editingAsset.value
-      ? 'Data contoh aset berhasil diperbarui.'
-      : 'Data contoh aset berhasil ditambahkan.',
-  )
-  formOpen.value = false
-  // Edit nama dapat membuat aset tidak lagi cocok dengan pencarian aktif.
-  page.value = Math.min(page.value, Math.max(1, Math.ceil(filteredAssets.value.length / limit)))
 }
 
-function deleteExample(asset: Asset) {
-  examples.value = examples.value.filter((item) => item.asset_id !== asset.asset_id)
-  deletingAsset.value = null
-  notify('success', `Data contoh ${asset.asset_name} berhasil dihapus.`)
-  page.value = Math.min(page.value, Math.max(1, Math.ceil(filteredAssets.value.length / limit)))
+watch(
+  search,
+  () => {
+    page.value = 1
+  },
+  { flush: 'sync' },
+)
+watch(
+  [search, page],
+  () => {
+    void loadAssets()
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => {
+  disposed = true
+  listController?.abort()
+})
+
+async function openForm(asset: Asset | null = null) {
+  if (saving.value || deleting.value || detailLoading.value) return
+  formError.value = ''
+  if (!asset) {
+    editingAsset.value = null
+    formOpen.value = true
+    return
+  }
+  detailLoading.value = true
+  try {
+    const detail = await assetsApi.detail(asset.asset_id)
+    if (disposed) return
+    editingAsset.value = detail
+    formOpen.value = true
+  } catch (error) {
+    notify('error', errorMessage(error))
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+async function saveAsset(input: AssetInput) {
+  if (saving.value) return
+  saving.value = true
+  formError.value = ''
+  const editingId = editingAsset.value?.asset_id
+  try {
+    if (editingId !== undefined) await assetsApi.update(editingId, input)
+    else await assetsApi.create(input)
+    formOpen.value = false
+    notify(
+      'success',
+      editingId !== undefined ? 'Aset berhasil diperbarui.' : 'Aset berhasil ditambahkan.',
+    )
+    await loadAssets()
+  } catch (error) {
+    formError.value = errorMessage(error)
+    notify('error', formError.value)
+  } finally {
+    saving.value = false
+  }
+}
+
+function confirmDelete(asset: Asset) {
+  if (saving.value || deleting.value || detailLoading.value) return
+  deleteError.value = ''
+  deletingAsset.value = asset
+}
+
+async function deleteAsset(asset: Asset) {
+  if (deleting.value) return
+  deleting.value = true
+  deleteError.value = ''
+  try {
+    await assetsApi.remove(asset.asset_id)
+    deletingAsset.value = null
+    notify('success', `Aset ${asset.asset_name} berhasil dihapus.`)
+    await loadAssets()
+  } catch (error) {
+    deleteError.value = errorMessage(error)
+    notify('error', deleteError.value)
+  } finally {
+    deleting.value = false
+  }
 }
 </script>
 
@@ -97,65 +160,69 @@ function deleteExample(asset: Asset) {
       </p>
     </header>
     <div
-      class="mt-8 mb-[18px] flex flex-wrap items-center gap-3 text-[13px] text-slate-600 [&_select]:rounded-md [&_select]:border [&_select]:border-slate-300 [&_select]:bg-white [&_select]:p-2 [&_select]:text-slate-700 [&_span]:text-slate-500"
-    >
-      <label for="preview-mode">Pratinjau tabel</label>
-      <select id="preview-mode" v-model="mode">
-        <option value="data">Data contoh</option>
-        <option value="loading">Loading</option>
-        <option value="empty">Data kosong</option>
-        <option value="search">Pencarian kosong</option>
-      </select>
-      <span>Data contoh lokal, belum terhubung ke API.</span>
-      <button
-        type="button"
-        class="cursor-pointer rounded-md border border-red-200 bg-white px-3 py-2 text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-blue-600"
-        @click="
-          notify('error', 'Ini contoh notifikasi gagal. Tidak ada permintaan API yang dikirim.')
-        "
-      >
-        Coba toast gagal
-      </button>
-    </div>
-    <div
       class="mb-[18px] flex flex-wrap items-end justify-between gap-4 [&>form]:mb-0 [&>form]:min-w-[min(100%,260px)] [&>form]:flex-1"
     >
       <AssetSearch v-model="search" />
       <button
         type="button"
         class="cursor-pointer rounded-lg border-0 bg-blue-600 px-[18px] py-3 text-sm text-white focus-visible:outline-3 focus-visible:outline-blue-300 focus-visible:outline-offset-2"
+        :disabled="detailLoading || saving || deleting"
         @click="openForm()"
       >
         + Tambah aset
       </button>
     </div>
+    <p v-if="detailLoading" role="status" class="mb-3 text-sm text-slate-500">
+      Memuat detail aset...
+    </p>
+    <section
+      v-if="listError"
+      role="alert"
+      class="my-5 rounded-xl border border-red-200 bg-red-50 p-6 text-center"
+    >
+      <h2 class="font-semibold text-red-800">Gagal memuat daftar aset</h2>
+      <p class="mt-2 text-sm text-red-700">{{ listError }}</p>
+      <button
+        type="button"
+        class="mt-4 cursor-pointer rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-800 focus-visible:outline-2 focus-visible:outline-blue-600"
+        @click="loadAssets"
+      >
+        Coba lagi
+      </button>
+    </section>
     <AssetTable
+      v-else
       :assets="assets"
       :page="page"
       :limit="limit"
-      :loading="mode === 'loading'"
-      :searching="mode === 'search' || search.length > 0"
+      :loading="loading"
+      :searching="search.length > 0"
       @edit="openForm($event)"
-      @delete="deletingAsset = $event"
+      @delete="confirmDelete"
     />
     <AssetPagination
+      v-if="!listError"
       v-model:page="page"
       :limit="limit"
-      :total="filteredAssets.length"
-      :loading="mode === 'loading'"
+      :total="total"
+      :loading="loading"
     />
     <AppToast :notification="notification" @dismiss="notification = null" />
     <AssetFormModal
       v-if="formOpen"
       :asset="editingAsset"
-      @cancel="formOpen = false"
-      @save="saveExample"
+      :saving="saving"
+      :error="formError"
+      @cancel="!saving && (formOpen = false)"
+      @save="saveAsset"
     />
     <AssetDeleteModal
       v-if="deletingAsset"
       :asset="deletingAsset"
-      @cancel="deletingAsset = null"
-      @confirm="deleteExample"
+      :deleting="deleting"
+      :error="deleteError"
+      @cancel="!deleting && (deletingAsset = null)"
+      @confirm="deleteAsset"
     />
   </main>
 </template>
