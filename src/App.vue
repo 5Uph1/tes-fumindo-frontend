@@ -3,14 +3,17 @@ import { computed, ref, watch } from 'vue'
 import AssetTable from './components/AssetTable.vue'
 import AssetSearch from './components/AssetSearch.vue'
 import AssetPagination from './components/AssetPagination.vue'
-import type { Asset } from './types/asset'
+import AssetFormModal from './components/AssetFormModal.vue'
+import type { Asset, AssetInput } from './types/asset'
 
 const mode = ref<'data' | 'loading' | 'empty' | 'search'>('data')
 const selectedAction = ref('')
 const search = ref('')
 const page = ref(1)
 const limit = 10
-const examples: Asset[] = [
+const formOpen = ref(false)
+const editingAsset = ref<Asset | null>(null)
+const examples = ref<Asset[]>([
   { asset_id: 3, asset_name: 'Laptop Operasional', stock_quantity: 5, category: 'Non-Consumable' },
   { asset_id: 2, asset_name: 'Kertas A4', stock_quantity: 0, category: 'Consumable' },
   { asset_id: 1, asset_name: 'Pulpen', stock_quantity: 50, category: 'Consumable' },
@@ -26,11 +29,11 @@ const examples: Asset[] = [
   { asset_id: 13, asset_name: 'Map Dokumen', stock_quantity: 40, category: 'Consumable' },
   { asset_id: 14, asset_name: 'Sticky Notes', stock_quantity: 15, category: 'Consumable' },
   { asset_id: 15, asset_name: 'Baterai AA', stock_quantity: 0, category: 'Consumable' },
-]
+])
 const filteredAssets = computed(() => {
   if (mode.value !== 'data') return []
   const keyword = search.value.toLocaleLowerCase('id-ID')
-  return examples
+  return examples.value
     .filter((asset) => asset.asset_name.toLocaleLowerCase('id-ID').includes(keyword))
     .sort((a, b) => b.asset_id - a.asset_id)
 })
@@ -40,6 +43,27 @@ const assets = computed(() =>
 watch([search, mode], () => {
   page.value = 1
 })
+
+function openForm(asset: Asset | null = null) {
+  editingAsset.value = asset
+  formOpen.value = true
+}
+
+function saveExample(input: AssetInput) {
+  if (editingAsset.value) {
+    const index = examples.value.findIndex(
+      (asset) => asset.asset_id === editingAsset.value?.asset_id,
+    )
+    if (index !== -1) examples.value[index] = { asset_id: editingAsset.value.asset_id, ...input }
+  } else {
+    const id = Math.max(0, ...examples.value.map((asset) => asset.asset_id)) + 1
+    examples.value.push({ asset_id: id, ...input })
+  }
+  selectedAction.value = 'Data contoh berhasil disimpan secara lokal.'
+  formOpen.value = false
+  // Edit nama dapat membuat aset tidak lagi cocok dengan pencarian aktif.
+  page.value = Math.min(page.value, Math.max(1, Math.ceil(filteredAssets.value.length / limit)))
+}
 </script>
 
 <template>
@@ -59,14 +83,17 @@ watch([search, mode], () => {
       </select>
       <span>Data contoh lokal, belum terhubung ke API.</span>
     </div>
-    <AssetSearch v-model="search" />
+    <div class="asset-toolbar">
+      <AssetSearch v-model="search" />
+      <button type="button" class="add-asset" @click="openForm()">+ Tambah aset</button>
+    </div>
     <AssetTable
       :assets="assets"
       :page="page"
       :limit="limit"
       :loading="mode === 'loading'"
       :searching="mode === 'search' || search.length > 0"
-      @edit="selectedAction = `Edit dipilih: ${$event.asset_name}`"
+      @edit="openForm($event)"
       @delete="selectedAction = `Hapus dipilih: ${$event.asset_name}`"
     />
     <AssetPagination
@@ -76,6 +103,12 @@ watch([search, mode], () => {
       :loading="mode === 'loading'"
     />
     <p class="action-status" role="status">{{ selectedAction }}</p>
+    <AssetFormModal
+      v-if="formOpen"
+      :asset="editingAsset"
+      @cancel="formOpen = false"
+      @save="saveExample"
+    />
   </main>
 </template>
 
@@ -133,5 +166,32 @@ h1 {
   min-height: 24px;
   color: #475569;
   font-size: 14px;
+}
+.asset-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.asset-toolbar > form {
+  flex: 1;
+  margin-bottom: 0;
+  min-width: min(100%, 260px);
+}
+.add-asset {
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.add-asset:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
 }
 </style>

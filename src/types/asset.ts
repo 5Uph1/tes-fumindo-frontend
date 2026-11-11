@@ -4,3 +4,5 @@ export interface Asset {
   stock_quantity: number
   category: 'Consumable' | 'Non-Consumable'
 }
+
+export type AssetInput = Omit<Asset, 'asset_id'>
